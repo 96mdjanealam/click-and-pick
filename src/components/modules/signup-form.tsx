@@ -10,6 +10,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { Link } from "react-router";
 import { useForm } from "react-hook-form";
+import Password from "../ui/password";
+import { useSignUpMutation } from "@/redux/features/auth/auth.api";
+import { toast } from "sonner";
 
 // Define the form data type
 interface FormData {
@@ -23,6 +26,8 @@ export function SignupForm({
   className,
   ...props
 }: React.ComponentProps<"form">) {
+  const [signUp] = useSignUpMutation();
+
   const {
     register,
     handleSubmit,
@@ -30,8 +35,22 @@ export function SignupForm({
   } = useForm<FormData>();
 
   // Handle form submission
-  const onSubmit = (data: FormData) => {
+  const onSubmit = async (data: FormData) => {
     console.log(data);
+
+    const userInfo = {
+      name: data.name,
+      email: data.email,
+      password: data.password,
+    };
+
+    try {
+      const result = await signUp(userInfo).unwrap();
+      console.log(result);
+      toast.success("User created successfully");
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   return (
@@ -83,9 +102,8 @@ export function SignupForm({
         </Field>
         <Field>
           <FieldLabel htmlFor="password">Password</FieldLabel>
-          <Input
+          <Password
             id="password"
-            type="password"
             {...register("password", {
               required: "Password is required",
               minLength: {
@@ -105,9 +123,8 @@ export function SignupForm({
         </Field>
         <Field>
           <FieldLabel htmlFor="confirm-password">Confirm Password</FieldLabel>
-          <Input
+          <Password
             id="confirm-password"
-            type="password"
             {...register("confirmPassword", {
               required: "Please confirm your password",
               validate: (value, formValues) =>
