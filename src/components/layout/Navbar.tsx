@@ -13,14 +13,51 @@ import {
 } from "@/components/ui/popover";
 import { ModeToggle } from "./mode-toggle";
 import { Link } from "react-router";
+import {
+  authApi,
+  useGetUserQuery,
+  useLogoutMutation,
+} from "@/redux/features/auth/auth.api";
+import { useAppDispatch } from "@/redux/hooks";
+import { useEffect, useState } from "react";
 
-// Navigation links array to be used in both desktop and mobile menus
-const navigationLinks = [
+const defaultLinks = [
   { href: "/", label: "Home" },
   { href: "/about", label: "About" },
 ];
 
 export default function Navbar() {
+  const { data } = useGetUserQuery(undefined);
+  const [logout] = useLogoutMutation();
+  const dispatch = useAppDispatch();
+
+  const role = data?.data?.role;
+  const [navigationLinks, setNavigationLinks] =
+    useState<{ href: string; label: string }[]>(defaultLinks);
+
+  useEffect(() => {
+    if (role) {
+      if (role === "ADMIN") {
+        setNavigationLinks([
+          ...defaultLinks,
+          { href: "/admin", label: "Dashboard" },
+        ]);
+      } else if (role === "USER") {
+        setNavigationLinks([
+          ...defaultLinks,
+          { href: "/user", label: "Dashboard" },
+        ]);
+      }
+    } else {
+      setNavigationLinks(defaultLinks);
+    }
+  }, [role]);
+
+  const handleLogout = async () => {
+    await logout(undefined);
+    dispatch(authApi.util.resetApiState());
+  };
+
   return (
     <header className="border-b">
       <div className="flex h-16 items-center justify-between gap-4 container px-4 mx-auto">
@@ -100,9 +137,20 @@ export default function Navbar() {
         {/* Right side */}
         <div className="flex items-center gap-2">
           <ModeToggle />
-          <Button asChild variant="ghost"  className="text-sm">
-            <Link to={"/login"}>Login</Link>
-          </Button>
+
+          {data?.data?.email ? (
+            <Button
+              onClick={() => handleLogout()}
+              variant="ghost"
+              className="text-sm"
+            >
+              logout
+            </Button>
+          ) : (
+            <Button asChild variant="default" className="text-sm">
+              <Link to={"/login"}>Login</Link>
+            </Button>
+          )}
         </div>
       </div>
     </header>

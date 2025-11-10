@@ -8,7 +8,7 @@ import {
   FieldSeparator,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { useForm } from "react-hook-form";
 import Password from "../ui/password";
 import { toast } from "sonner";
@@ -24,6 +24,7 @@ export function LoginForm({
   ...props
 }: React.ComponentProps<"form">) {
   const [login] = useLoginMutation();
+  const navigate = useNavigate();
 
   const {
     register,
@@ -32,12 +33,13 @@ export function LoginForm({
   } = useForm<FormData>();
 
   const onSubmit = async (data: FormData) => {
-    console.log(data);
+    // console.log(data);
 
     try {
       const result = await login(data).unwrap();
       console.log(result);
-      toast.success("User created successfully");
+      toast.success("User logged in successfully");
+      navigate("/");
     } catch (error) {
       console.log(error);
     }
